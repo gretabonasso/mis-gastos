@@ -69,7 +69,25 @@ html,body{min-height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;
 .status-banner strong{font-weight:600}
 
 /* CARDS */
-.cards2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.cards2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.cards3{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.card-ahorro{background:var(--dark);border-radius:var(--r);padding:14px;box-shadow:0 2px 8px rgba(15,28,46,0.1)}
+.card-ahorro .cl{font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:5px}
+.card-ahorro .cv{font-size:20px;font-weight:500;color:#7ED4A0;line-height:1}
+.card-ahorro .cs{font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px}
+.card-ahorro .tc-row{display:flex;align-items:center;gap:5px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.1)}
+.card-ahorro .tc-row span{font-size:11px;color:rgba(255,255,255,0.4)}
+.card-ahorro .tc-row input{width:70px;padding:4px 7px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);font-size:12px;font-family:'DM Sans',sans-serif;color:white;outline:none}
+.card-ahorro{background:var(--dark);border-radius:var(--r);padding:14px;box-shadow:0 2px 8px rgba(15,28,46,0.1)}
+.card-ahorro .cl{font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:5px}
+.card-ahorro .cv{font-size:18px;font-weight:500;color:#7ED4A0;line-height:1}
+.card-ahorro .cs{font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px}
+.card-ahorro .tc-row{display:flex;align-items:center;gap:5px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.1)}
+.card-ahorro .tc-row span{font-size:11px;color:rgba(255,255,255,0.4)}
+.card-ahorro .tc-row input{width:70px;padding:4px 7px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);font-size:12px;font-family:'DM Sans',sans-serif;color:white;outline:none}
+.medio-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.medio-chip{padding:7px 13px;border-radius:20px;border:1px solid var(--border);background:var(--bg);font-size:12px;cursor:pointer;color:var(--text2);font-family:'DM Sans',sans-serif;transition:all .15s}
+.medio-chip.selected{background:var(--dark);color:white;border-color:var(--dark)}
 .card{background:var(--white);border-radius:var(--r);border:1px solid var(--border);padding:14px;box-shadow:0 2px 8px rgba(15,28,46,0.04)}
 .card .cl{font-size:11px;color:var(--text3);margin-bottom:5px}
 .card .cv{font-size:20px;font-weight:500;color:var(--text);line-height:1}
@@ -231,6 +249,21 @@ html,body{min-height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;
       <div class="cs" id="c-ahorro-sub">del saldo</div>
     </div>
   </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+    <div class="card-ahorro">
+      <div class="cl">Ahorrado este mes</div>
+      <div class="cv" id="c-ahorrado-usd">USD 0</div>
+      <div class="cs" id="c-ahorrado-ars">$0 en pesos</div>
+      <div class="tc-row">
+        <span>TC $</span>
+        <input type="number" id="tc-ahorro" value="1400" onchange="renderAhorro()"/>
+      </div>
+    </div>
+    <div class="card">
+      <div class="cl">Gastos por medio</div>
+      <div id="c-medios" style="margin-top:6px;font-size:12px;color:var(--text2);line-height:1.8">—</div>
+    </div>
+  </div>
 
   <!-- DEUDA PAPÁ -->
   <div class="deuda-card" id="deuda-card">
@@ -317,6 +350,14 @@ html,body{min-height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;
       <option>Boludeces Greta</option><option>Ahorro</option>
       <option>Extraordinario</option><option>Deuda papá</option>
     </select>
+    <label>Medio de pago</label>
+    <div class="medio-chips" id="medio-chips">
+      <button type="button" class="medio-chip selected" onclick="selMedio(this,'Transferencia')">Transferencia</button>
+      <button type="button" class="medio-chip" onclick="selMedio(this,'Mastercard')">💳 Mastercard</button>
+      <button type="button" class="medio-chip" onclick="selMedio(this,'Visa')">💳 Visa</button>
+      <button type="button" class="medio-chip" onclick="selMedio(this,'Efectivo')">💵 Efectivo</button>
+    </div>
+    <input type="hidden" id="f-medio" value="Transferencia"/>
     <label>Fecha</label>
     <input type="date" id="f-fecha"/>
     <div class="modal-btns">
@@ -568,6 +609,7 @@ function render(){
   });
 
   renderTx();
+  renderAhorro();
   renderGrafico();
   renderComparacion();
   renderFrecuentes();
@@ -583,11 +625,35 @@ function renderTx(){
   cont.innerHTML='';
   txs.forEach((t,i)=>{
     const ci=CATS.indexOf(t.categoria)%CAT_COLORS.length;
+    const medio=t.medio_pago||'';
+    const medioIcon=medio==='Mastercard'?'💳 MC':medio==='Visa'?'💳 Visa':medio==='Efectivo'?'💵':'🔁';
     const d=document.createElement('div');
     d.className='tx-item';
-    d.innerHTML=`<div class="tx-dot" style="background:${CAT_COLORS[ci]}"></div><div class="tx-mid"><div class="tx-desc">${t.descripcion}</div><div class="tx-cat">${t.categoria}</div></div><div class="tx-r"><div class="tx-amt">${fmt(t.importe)}</div><div class="tx-fecha">${t.fecha?t.fecha.split('-').reverse().join('/'):'—'}</div></div><button class="tx-del" onclick="eliminar('${t.id}','${key}',${i})">×</button>`;
+    d.innerHTML=`<div class="tx-dot" style="background:${CAT_COLORS[ci]}"></div><div class="tx-mid"><div class="tx-desc">${t.descripcion}</div><div class="tx-cat">${t.categoria} · <span style="color:var(--accent)">${medioIcon}</span></div></div><div class="tx-r"><div class="tx-amt">${fmt(t.importe)}</div><div class="tx-fecha">${t.fecha?t.fecha.split('-').reverse().join('/'):'—'}</div></div><button class="tx-del" onclick="eliminar('${t.id}','${key}',${i})">×</button>`;
     cont.appendChild(d);
   });
+}
+
+function selMedio(btn, val){
+  document.querySelectorAll('.medio-chip').forEach(c=>c.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('f-medio').value=val;
+}
+
+function renderAhorro(){
+  const key=MESES[mesIdx].key;
+  const txs=txCache[key]||[];
+  const totalAhorro=txs.filter(t=>t.categoria==='Ahorro').reduce((a,t)=>a+Number(t.importe),0);
+  const tc=parseFloat(document.getElementById('tc-ahorro').value)||1400;
+  const usd=totalAhorro/tc;
+  document.getElementById('c-ahorrado-usd').textContent='USD '+Math.round(usd).toLocaleString('es-AR');
+  document.getElementById('c-ahorrado-ars').textContent=fmt(totalAhorro)+' en pesos';
+  // medios breakdown
+  const medios={};
+  txs.forEach(t=>{const m=t.medio_pago||'Transferencia';medios[m]=(medios[m]||0)+Number(t.importe)});
+  const mediosEl=document.getElementById('c-medios');
+  if(Object.keys(medios).length===0){mediosEl.textContent='—';return}
+  mediosEl.innerHTML=Object.entries(medios).map(([m,v])=>`<div><strong>${m}</strong> ${fmt(v)}</div>`).join('');
 }
 
 function renderGrafico(){
@@ -673,12 +739,17 @@ async function guardarGasto(){
   const descripcion=document.getElementById('f-desc').value.trim();
   const categoria=document.getElementById('f-cat').value;
   const fecha=document.getElementById('f-fecha').value;
+  const medio_pago=document.getElementById('f-medio').value||'Transferencia';
   if(!importe||!descripcion)return;
   const mes=MESES[mesIdx];
-  const res=await sb('/rest/v1/transacciones',{method:'POST',prefer:'return=representation',body:JSON.stringify({usuario_id:uid,mes:mes.key,fecha,importe,descripcion,categoria})});
+  const res=await sb('/rest/v1/transacciones',{method:'POST',prefer:'return=representation',body:JSON.stringify({usuario_id:uid,mes:mes.key,fecha,importe,descripcion,categoria,medio_pago})});
   if(res&&res[0])txCache[mes.key]=[res[0],...(txCache[mes.key]||[])];
   document.getElementById('f-importe').value='';
   document.getElementById('f-desc').value='';
+  // reset medio
+  document.querySelectorAll('.medio-chip').forEach(c=>c.classList.remove('selected'));
+  document.querySelector('.medio-chip').classList.add('selected');
+  document.getElementById('f-medio').value='Transferencia';
   closeModal();render();
 }
 
