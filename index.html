@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Mis Gastos</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --dark: #0F1C2E;
+    --mid: #1B3A5C;
+    --accent: #2E6AAF;
+    --light-accent: #4A8FD4;
+    --bg: #F7F9FC;
+    --bg2: #EEF3F9;
+    --white: #FFFFFF;
+    --text: #0F1C2E;
+    --text2: #4A5E75;
+    --text3: #8CA0B5;
+    --border: rgba(15,28,46,0.1);
+    --green: #1A6B3A;
+    --green-bg: #E8F5EE;
+    --red: #8B1A1A;
+    --red-bg: #FAEAEA;
+    --yellow-bg: #FFF8E7;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); font-family: 'DM Sans', sans-serif; color: var(--text); }
+
+  /* ======= LOGIN ======= */
+  .login-wrap { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
+  .login-logo { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--dark); margin-bottom: 6px; }
+  .login-sub { font-size: 13px; color: var(--text3); margin-bottom: 36px; }
+  .login-card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); padding: 28px 24px; width: 100%; max-width: 360px; }
+  .login-card h2 { font-size: 16px; font-weight: 500; margin-bottom: 20px; }
+  .field { margin-bottom: 14px; }
+  .field label { font-size: 12px; color: var(--text2); display: block; margin-bottom: 5px; }
+  .field input { width: 100%; padding: 11px 14px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg); font-size: 14px; font-family: 'DM Sans', sans-serif; color: var(--text); outline: none; transition: border 0.2s; }
+  .field input:focus { border-color: var(--accent); }
+  .btn-primary { width: 100%; padding: 13px; background: var(--dark); color: white; border: none; border-radius: var(--radius-sm); font-size: 15px; font-family: 'DM Sans', sans-serif; font-weight: 500; cursor: pointer; margin-top: 4px; transition: background 0.2s; }
+  .btn-primary:hover { background: var(--mid); }
+  .login-toggle { text-align: center; margin-top: 16px; font-size: 13px; color: var(--text3); }
+  .login-toggle span { color: var(--accent); cursor: pointer; text-decoration: underline; }
+  .msg-error { font-size: 12px; color: var(--red); margin-top: 10px; text-align: center; min-height: 18px; }
+
+  /* ======= APP ======= */
+  .app { display: none; max-width: 430px; margin: 0 auto; padding: 16px 14px 100px; }
+  .app-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+  .app-header h1 { font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--dark); line-height: 1; }
+  .app-header p { font-size: 12px; color: var(--text3); margin-top: 3px; }
+  .btn-logout { background: none; border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 12px; color: var(--text3); cursor: pointer; font-family: 'DM Sans', sans-serif; }
+
+  /* mes nav */
+  .mes-nav { display: flex; align-items: center; background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); padding: 12px 16px; margin-bottom: 14px; gap: 10px; }
+  .mes-nav button { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg); font-size: 16px; cursor: pointer; color: var(--text2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+  .mes-nav button:hover { background: var(--bg2); }
+  .mes-nav button:disabled { opacity: 0.25; cursor: default; }
+  .mes-center { flex: 1; text-align: center; }
+  .mes-center .mes-label { font-size: 16px; font-weight: 500; color: var(--dark); }
+  .mes-center .mes-extra { font-size: 11px; color: var(--light-accent); margin-top: 2px; }
+
+  /* cards */
+  .cards2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); padding: 14px; }
+  .card .c-label { font-size: 11px; color: var(--text3); margin-bottom: 5px; }
+  .card .c-val { font-size: 21px; font-weight: 500; color: var(--dark); line-height: 1; }
+  .card .c-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+  .card.green .c-val { color: var(--green); }
+  .card.red .c-val { color: var(--red); }
+
+  /* usd */
+  .usd-card { background: var(--dark); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .usd-card .usd-left .label { font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+  .usd-card .usd-left .val { font-size: 22px; font-weight: 500; color: #7ED4A0; }
+  .usd-tc { display: flex; align-items: center; gap: 6px; }
+  .usd-tc span { font-size: 11px; color: rgba(255,255,255,0.4); }
+  .usd-tc input { width: 80px; padding: 7px 9px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.08); font-size: 13px; font-family: 'DM Sans', sans-serif; color: white; outline: none; }
+
+  /* tabs */
+  .tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .tab { padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--white); font-size: 13px; cursor: pointer; color: var(--text2); font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+  .tab.active { background: var(--dark); color: white; border-color: var(--dark); }
+
+  /* previsto vs real */
+  .pvr-table { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; margin-bottom: 14px; }
+  .pvr-header { display: grid; grid-template-columns: 1fr 72px 72px 62px; padding: 8px 14px; background: var(--bg2); }
+  .pvr-header span { font-size: 10px; color: var(--text3); text-align: right; font-weight: 500; }
+  .pvr-header span:first-child { text-align: left; }
+  .pvr-row { display: grid; grid-template-columns: 1fr 72px 72px 62px; padding: 10px 14px; border-top: 1px solid var(--border); align-items: center; }
+  .pvr-row .cat { font-size: 12px; color: var(--text); }
+  .pvr-row .bar { height: 3px; background: var(--bg2); border-radius: 2px; margin-top: 3px; }
+  .pvr-row .bar-fill { height: 3px; border-radius: 2px; background: var(--accent); transition: width 0.4s; }
+  .pvr-row .bar-fill.over { background: var(--red); }
+  .pvr-row .num { font-size: 11px; color: var(--text2); text-align: right; }
+  .pvr-row .dif { font-size: 11px; text-align: right; font-weight: 500; }
+  .pvr-row .dif.pos { color: var(--green); }
+  .pvr-row .dif.neg { color: var(--red); }
+
+  /* transacciones */
+  .tx-list { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; margin-bottom: 14px; }
+  .tx-item { display: flex; align-items: center; padding: 11px 14px; border-top: 1px solid var(--border); gap: 8px; }
+  .tx-item:first-child { border-top: none; }
+  .tx-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+  .tx-mid { flex: 1; min-width: 0; }
+  .tx-mid .desc { font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tx-mid .cat { font-size: 11px; color: var(--text3); margin-top: 1px; }
+  .tx-right { text-align: right; flex-shrink: 0; }
+  .tx-right .amt { font-size: 13px; font-weight: 500; color: var(--red); }
+  .tx-right .fecha { font-size: 11px; color: var(--text3); margin-top: 1px; }
+  .tx-del { background: none; border: none; color: var(--text3); font-size: 18px; cursor: pointer; padding: 0 0 0 8px; line-height: 1; flex-shrink: 0; }
+  .empty { text-align: center; padding: 28px; font-size: 13px; color: var(--text3); }
+
+  /* FAB */
+  .fab { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--dark); color: white; border: none; border-radius: 30px; padding: 14px 28px; font-size: 15px; font-family: 'DM Sans', sans-serif; font-weight: 500; cursor: pointer; box-shadow: 0 4px 20px rgba(15,28,46,0.25); z-index: 100; white-space: nowrap; transition: all 0.2s; }
+  .fab:hover { background: var(--mid); transform: translateX(-50%) translateY(-1px); }
+
+  /* modal */
+  .modal-bg { position: fixed; inset: 0; background: rgba(15,28,46,0.5); z-index: 200; display: none; align-items: flex-end; justify-content: center; }
+  .modal-bg.open { display: flex; }
+  .modal { background: var(--white); border-radius: var(--radius) var(--radius) 0 0; padding: 20px 20px 36px; width: 100%; max-width: 430px; }
+  .modal-title { font-size: 16px; font-weight: 500; margin-bottom: 18px; }
+  .modal label { font-size: 12px; color: var(--text2); display: block; margin-bottom: 4px; margin-top: 12px; }
+  .modal label:first-of-type { margin-top: 0; }
+  .modal input, .modal select { width: 100%; padding: 11px 13px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg); font-size: 14px; font-family: 'DM Sans', sans-serif; color: var(--text); outline: none; }
+  .modal input:focus, .modal select:focus { border-color: var(--accent); }
+  .modal-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+  .btn-cancel { padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: transparent; font-size: 14px; font-family: 'DM Sans', sans-serif; cursor: pointer; color: var(--text2); }
+  .btn-save { padding: 12px; border: none; border-radius: var(--radius-sm); background: var(--dark); color: white; font-size: 14px; font-family: 'DM Sans', sans-serif; font-weight: 500; cursor: pointer; }
+  .sec-title { font-size: 11px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .loading { text-align: center; padding: 40px; color: var(--text3); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="login-screen">
+  <div class="login-logo">mis gastos</div>
+  <div class="login-sub">tu plata, ordenada</div>
+  <div class="login-card">
+    <h2 id="login-title">Iniciar sesión</h2>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="l-email" placeholder="tu@email.com" />
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="l-pass" placeholder="••••••••" />
+    </div>
+    <button class="btn-primary" onclick="authAction()">Entrar</button>
+    <div class="msg-error" id="login-error"></div>
+    <div class="login-toggle">
+      <span onclick="toggleMode()">¿No tenés cuenta? Registrate</span>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app-screen">
+  <div class="app-header">
+    <div>
+      <h1>mis gastos</h1>
+      <p id="user-email-label"></p>
+    </div>
+    <button class="btn-logout" onclick="logout()">Salir</button>
+  </div>
+
+  <div class="mes-nav">
+    <button id="btn-prev" onclick="cambiarMes(-1)">&#8249;</button>
+    <div class="mes-center">
+      <div class="mes-label" id="mes-label">—</div>
+      <div class="mes-extra" id="mes-extra"></div>
+    </div>
+    <button id="btn-next" onclick="cambiarMes(1)">&#8250;</button>
+  </div>
+
+  <div class="cards2">
+    <div class="card">
+      <div class="c-label">Gastado</div>
+      <div class="c-val" id="c-real">$0</div>
+      <div class="c-sub" id="c-prev-sub">de $0 previsto</div>
+    </div>
+    <div class="card green" id="c-ahorro-card">
+      <div class="c-label">Ahorro estimado</div>
+      <div class="c-val" id="c-ahorro">$0</div>
+      <div class="c-sub" id="c-sueldo-sub">sueldo $2.000.000</div>
+    </div>
+  </div>
+
+  <div class="usd-card">
+    <div class="usd-left">
+      <div class="label">Ahorro acumulado</div>
+      <div class="val" id="usd-val">USD 2.937</div>
+    </div>
+    <div class="usd-tc">
+      <span>TC $</span>
+      <input type="number" id="tc-input" value="1400" onchange="saveTCAndRender()" />
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="setTab('resumen', this)">Resumen</button>
+    <button class="tab" onclick="setTab('transacciones', this)">Transacciones</button>
+  </div>
+
+  <div id="tab-resumen">
+    <div class="sec-title">Previsto vs real</div>
+    <div class="pvr-table">
+      <div class="pvr-header">
+        <span>Categoría</span>
+        <span>Previsto</span>
+        <span>Real</span>
+        <span>Dif.</span>
+      </div>
+      <div id="pvr-rows"><div class="loading">Cargando...</div></div>
+    </div>
+  </div>
+
+  <div id="tab-transacciones" style="display:none">
+    <div class="sec-title">Transacciones del mes</div>
+    <div class="tx-list" id="tx-list"><div class="loading">Cargando...</div></div>
+  </div>
+</div>
+
+<button class="fab" id="fab-btn" style="display:none" onclick="openModal()">+ Cargar gasto</button>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal-bg" onclick="closeModalBg(event)">
+  <div class="modal">
+    <div class="modal-title">Nuevo gasto</div>
+    <label>Importe ($)</label>
+    <input type="number" id="f-importe" placeholder="0" inputmode="numeric" />
+    <label>Descripción</label>
+    <input type="text" id="f-desc" placeholder="Ej: McDonald's" />
+    <label>Categoría</label>
+    <select id="f-cat">
+      <option>Comida</option>
+      <option>Gym</option>
+      <option>Transporte</option>
+      <option>Imprevistos</option>
+      <option>Compras personales</option>
+      <option>Regalos</option>
+      <option>Farmacia</option>
+      <option>Boludeces Greta</option>
+      <option>Extraordinario</option>
+      <option>Deuda papá</option>
+    </select>
+    <label>Fecha</label>
+    <input type="date" id="f-fecha" />
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="guardarGasto()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://vjqqqvcdyqhcrrwmomiy.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqcXFxdmNkeXFoY3Jyd21vbWl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NDQzOTEsImV4cCI6MjA5NDEyMDM5MX0.psctT6hdeqlJjfhN1_cZI-3wVkzFxQLIKCsTwCnOcj0';
+
+const MESES = [
+  {key:'abr26',label:'Abril 2026',     sueldo:2000000,paga_deuda:false,aguinaldo:false},
+  {key:'may26',label:'Mayo 2026',      sueldo:2000000,paga_deuda:false,aguinaldo:false},
+  {key:'jun26',label:'Junio 2026',     sueldo:2000000,paga_deuda:true, aguinaldo:true},
+  {key:'jul26',label:'Julio 2026',     sueldo:2000000,paga_deuda:true, aguinaldo:false},
+  {key:'ago26',label:'Agosto 2026',    sueldo:2000000,paga_deuda:true, aguinaldo:false},
+  {key:'sep26',label:'Septiembre 2026',sueldo:2000000,paga_deuda:true, aguinaldo:false},
+  {key:'oct26',label:'Octubre 2026',   sueldo:2000000,paga_deuda:true, aguinaldo:false},
+  {key:'nov26',label:'Noviembre 2026', sueldo:2000000,paga_deuda:true, aguinaldo:false},
+  {key:'dic26',label:'Diciembre 2026', sueldo:2000000,paga_deuda:true, aguinaldo:true},
+  {key:'ene27',label:'Enero 2027',     sueldo:2000000,paga_deuda:true, aguinaldo:false},
+  {key:'feb27',label:'Febrero 2027',   sueldo:2000000,paga_deuda:true, aguinaldo:false},
+  {key:'mar27',label:'Marzo 2027',     sueldo:2000000,paga_deuda:true, aguinaldo:false},
+  {key:'abr27',label:'Abril 2027',     sueldo:2000000,paga_deuda:true, aguinaldo:false},
+  {key:'may27',label:'Mayo 2027',      sueldo:2000000,paga_deuda:true, aguinaldo:false},
+];
+
+const CATS = ['Comida','Gym','Transporte','Imprevistos','Compras personales','Regalos','Farmacia','Boludeces Greta','Extraordinario','Deuda papá'];
+const PREVISTO_BASE = {
+  'Comida':280000,'Gym':136000,'Transporte':45440,'Imprevistos':50000,
+  'Deuda papá':0,'Compras personales':0,'Regalos':0,'Farmacia':0,
+  'Boludeces Greta':0,'Extraordinario':0
+};
+
+const TX_ABRIL = [
+  {fecha:'2026-04-16',importe:123484,descripcion:'Kosmos',categoria:'Compras personales'},
+  {fecha:'2026-04-01',importe:119000,descripcion:'Gym',categoria:'Gym'},
+  {fecha:'2026-04-01',importe:102520,descripcion:'Cucina Paradiso',categoria:'Comida'},
+  {fecha:'2026-03-26',importe:61850,descripcion:'Quotidiano Jazmin',categoria:'Comida'},
+  {fecha:'2026-04-13',importe:38024,descripcion:'Despedida Mery',categoria:'Regalos'},
+  {fecha:'2026-04-06',importe:31086,descripcion:'Estacionamiento',categoria:'Transporte'},
+  {fecha:'2026-04-18',importe:30500,descripcion:'Comida Jazmin',categoria:'Comida'},
+  {fecha:'2026-03-29',importe:27599,descripcion:"McDonald's",categoria:'Comida'},
+  {fecha:'2026-03-31',importe:27000,descripcion:'Estacionamiento',categoria:'Transporte'},
+  {fecha:'2026-04-06',importe:25800,descripcion:'Libro',categoria:'Extraordinario'},
+  {fecha:'2026-04-10',importe:15233,descripcion:'Regalo Olita',categoria:'Regalos'},
+  {fecha:'2026-04-16',importe:14500,descripcion:'Café Thiago',categoria:'Comida'},
+  {fecha:'2026-04-08',importe:12800,descripcion:'Chocolates Magda',categoria:'Extraordinario'},
+  {fecha:'2026-03-28',importe:11000,descripcion:'Entre Bollos',categoria:'Comida'},
+  {fecha:'2026-04-21',importe:11000,descripcion:'Medialunas laburo',categoria:'Comida'},
+  {fecha:'2026-03-31',importe:9500,descripcion:'Deli Laburo',categoria:'Comida'},
+  {fecha:'2026-04-11',importe:6000,descripcion:'Gatorade',categoria:'Comida'},
+  {fecha:'2026-04-11',importe:5800,descripcion:'Propina pizza',categoria:'Comida'},
+  {fecha:'2026-04-01',importe:5592,descripcion:'Psicóloga',categoria:'Extraordinario'},
+  {fecha:'2026-04-09',importe:4000,descripcion:'Estacionamiento',categoria:'Transporte'},
+  {fecha:'2026-04-20',importe:2200,descripcion:'Kiosco',categoria:'Comida'},
+  {fecha:'2026-04-21',importe:1480,descripcion:'Colectivo',categoria:'Transporte'},
+];
+
+let userId = null;
+let mesIdx = 0;
+let txCache = {};
+let configCache = {tipo_cambio:1400, usd_acumulado:2937};
+let isRegister = false;
+
+async function sbFetch(path, opts={}) {
+  const res = await fetch(SUPABASE_URL + path, {
+    ...opts,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': opts.prefer || '',
+      ...(opts.headers||{})
+    }
+  });
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+function fmtARS(n) {
+  return '$' + Math.round(n).toLocaleString('es-AR');
+}
+
+function toggleMode() {
+  isRegister = !isRegister;
+  document.getElementById('login-title').textContent = isRegister ? 'Crear cuenta' : 'Iniciar sesión';
+  document.querySelector('.login-toggle span').textContent = isRegister ? '¿Ya tenés cuenta? Iniciá sesión' : '¿No tenés cuenta? Registrate';
+  document.getElementById('login-error').textContent = '';
+}
+
+async function authAction() {
+  const email = document.getElementById('l-email').value.trim();
+  const pass = document.getElementById('l-pass').value.trim();
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+  if (!email || !pass) { errEl.textContent = 'Completá email y contraseña'; return; }
+
+  if (isRegister) {
+    const existing = await sbFetch('/rest/v1/usuarios?email=eq.' + encodeURIComponent(email) + '&select=id');
+    if (existing && existing.length > 0) { errEl.textContent = 'Ese email ya está registrado'; return; }
+    const res = await sbFetch('/rest/v1/usuarios', {
+      method: 'POST',
+      prefer: 'return=representation',
+      body: JSON.stringify({email, password: pass})
+    });
+    if (!res || !res[0]) { errEl.textContent = 'Error al crear cuenta'; return; }
+    userId = res[0].id;
+    await sbFetch('/rest/v1/config', {
+      method:'POST',
+      prefer:'return=minimal',
+      body: JSON.stringify({usuario_id: userId, tipo_cambio:1400, usd_acumulado:2937})
+    });
+  } else {
+    const res = await sbFetch('/rest/v1/usuarios?email=eq.' + encodeURIComponent(email) + '&password=eq.' + encodeURIComponent(pass) + '&select=id,email');
+    if (!res || res.length === 0) { errEl.textContent = 'Email o contraseña incorrectos'; return; }
+    userId = res[0].id;
+  }
+
+  localStorage.setItem('greta_uid', userId);
+  localStorage.setItem('greta_email', email);
+  enterApp(email);
+}
+
+async function enterApp(email) {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+  document.getElementById('fab-btn').style.display = 'block';
+  document.getElementById('user-email-label').textContent = email;
+
+  const cfg = await sbFetch('/rest/v1/config?usuario_id=eq.' + userId + '&select=tipo_cambio,usd_acumulado');
+  if (cfg && cfg[0]) {
+    configCache = cfg[0];
+    document.getElementById('tc-input').value = cfg[0].tipo_cambio;
+  }
+
+  await cargarTxMes(MESES[mesIdx].key);
+  render();
+}
+
+async function cargarTxMes(mesKey) {
+  if (txCache[mesKey] !== undefined) return;
+  const res = await sbFetch('/rest/v1/transacciones?usuario_id=eq.' + userId + '&mes=eq.' + mesKey + '&select=id,fecha,importe,descripcion,categoria&order=fecha.desc');
+  txCache[mesKey] = res || [];
+  if (mesKey === 'abr26' && txCache['abr26'].length === 0) {
+    for (const tx of TX_ABRIL) {
+      await sbFetch('/rest/v1/transacciones', {
+        method:'POST', prefer:'return=minimal',
+        body: JSON.stringify({usuario_id:userId, mes:'abr26', ...tx})
+      });
+    }
+    const res2 = await sbFetch('/rest/v1/transacciones?usuario_id=eq.' + userId + '&mes=eq.abr26&select=id,fecha,importe,descripcion,categoria&order=fecha.desc');
+    txCache['abr26'] = res2 || [];
+  }
+}
+
+function getPrevisto(mesKey) {
+  const m = MESES.find(x => x.key === mesKey);
+  const p = {...PREVISTO_BASE};
+  if (m.paga_deuda) p['Deuda papá'] = 1120000;
+  if (m.aguinaldo) p['_aguinaldo'] = 1000000;
+  return p;
+}
+
+function getReal(mesKey) {
+  const txs = txCache[mesKey] || [];
+  const real = {};
+  CATS.forEach(c => real[c] = 0);
+  txs.forEach(t => { if (real[t.categoria] !== undefined) real[t.categoria] += Number(t.importe); });
+  return real;
+}
+
+function render() {
+  const mes = MESES[mesIdx];
+  document.getElementById('btn-prev').disabled = mesIdx === 0;
+  document.getElementById('btn-next').disabled = mesIdx === MESES.length - 1;
+  document.getElementById('mes-label').textContent = mes.label;
+  const extras = [];
+  if (mes.aguinaldo) extras.push('aguinaldo');
+  if (mes.paga_deuda) extras.push('paga deuda papá');
+  document.getElementById('mes-extra').textContent = extras.join(' · ');
+
+  const prev = getPrevisto(mes.key);
+  const real = getReal(mes.key);
+  const totalReal = CATS.reduce((a,c) => a+(real[c]||0), 0);
+  const totalPrev = CATS.reduce((a,c) => a+(prev[c]||0), 0);
+  const sueldo = mes.sueldo + (prev['_aguinaldo']||0);
+  const ahorro = sueldo - totalReal;
+  const tc = parseFloat(document.getElementById('tc-input').value)||1400;
+  const usdMes = ahorro / tc;
+  const usdTotal = configCache.usd_acumulado + usdMes;
+
+  document.getElementById('c-real').textContent = fmtARS(totalReal);
+  document.getElementById('c-prev-sub').textContent = 'de ' + fmtARS(totalPrev) + ' previsto';
+  document.getElementById('c-ahorro').textContent = fmtARS(ahorro);
+  document.getElementById('c-sueldo-sub').textContent = 'sueldo ' + fmtARS(sueldo);
+  document.getElementById('c-ahorro-card').className = 'card ' + (ahorro >= 0 ? 'green' : 'red');
+  document.getElementById('usd-val').textContent = 'USD ' + Math.round(usdTotal).toLocaleString('es-AR');
+
+  const pvrCont = document.getElementById('pvr-rows');
+  pvrCont.innerHTML = '';
+  CATS.forEach(cat => {
+    const p = prev[cat]||0;
+    const r = real[cat]||0;
+    if (p===0 && r===0) return;
+    const dif = p - r;
+    const pct = p > 0 ? Math.min(r/p,1) : (r>0?1:0);
+    const over = r > p && p > 0;
+    const row = document.createElement('div');
+    row.className = 'pvr-row';
+    row.innerHTML = `
+      <div>
+        <div class="cat">${cat}</div>
+        <div class="bar"><div class="bar-fill${over?' over':''}" style="width:${Math.round(pct*100)}%"></div></div>
+      </div>
+      <div class="num">${fmtARS(p)}</div>
+      <div class="num">${fmtARS(r)}</div>
+      <div class="dif ${dif>=0?'pos':'neg'}">${dif>=0?'+':''}${fmtARS(dif)}</div>
+    `;
+    pvrCont.appendChild(row);
+  });
+
+  renderTx();
+}
+
+function renderTx() {
+  const mes = MESES[mesIdx];
+  const txs = txCache[mes.key] || [];
+  const cont = document.getElementById('tx-list');
+  if (txs.length === 0) { cont.innerHTML = '<div class="empty">Sin transacciones este mes</div>'; return; }
+  cont.innerHTML = '';
+  txs.forEach((t, i) => {
+    const div = document.createElement('div');
+    div.className = 'tx-item';
+    div.innerHTML = `
+      <div class="tx-dot"></div>
+      <div class="tx-mid">
+        <div class="desc">${t.descripcion}</div>
+        <div class="cat">${t.categoria}</div>
+      </div>
+      <div class="tx-right">
+        <div class="amt">${fmtARS(t.importe)}</div>
+        <div class="fecha">${t.fecha?t.fecha.split('-').reverse().join('/'):'—'}</div>
+      </div>
+      <button class="tx-del" onclick="eliminar('${t.id}', ${i})">×</button>
+    `;
+    cont.appendChild(div);
+  });
+}
+
+async function eliminar(id, idx) {
+  const mes = MESES[mesIdx];
+  await sbFetch('/rest/v1/transacciones?id=eq.' + id, {method:'DELETE'});
+  txCache[mes.key].splice(idx, 1);
+  render();
+}
+
+async function cambiarMes(dir) {
+  mesIdx = Math.max(0, Math.min(MESES.length-1, mesIdx+dir));
+  const key = MESES[mesIdx].key;
+  if (txCache[key] === undefined) await cargarTxMes(key);
+  render();
+}
+
+function openModal() {
+  document.getElementById('modal-bg').classList.add('open');
+  document.getElementById('f-fecha').value = new Date().toISOString().split('T')[0];
+  setTimeout(() => document.getElementById('f-importe').focus(), 100);
+}
+function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
+function closeModalBg(e) { if (e.target === document.getElementById('modal-bg')) closeModal(); }
+
+async function guardarGasto() {
+  const importe = parseFloat(document.getElementById('f-importe').value);
+  const descripcion = document.getElementById('f-desc').value.trim();
+  const categoria = document.getElementById('f-cat').value;
+  const fecha = document.getElementById('f-fecha').value;
+  if (!importe || !descripcion) return;
+  const mes = MESES[mesIdx];
+  const res = await sbFetch('/rest/v1/transacciones', {
+    method:'POST', prefer:'return=representation',
+    body: JSON.stringify({usuario_id:userId, mes:mes.key, fecha, importe, descripcion, categoria})
+  });
+  if (res && res[0]) {
+    txCache[mes.key] = [res[0], ...(txCache[mes.key]||[])];
+  }
+  document.getElementById('f-importe').value = '';
+  document.getElementById('f-desc').value = '';
+  closeModal();
+  render();
+}
+
+async function saveTCAndRender() {
+  const tc = parseFloat(document.getElementById('tc-input').value)||1400;
+  configCache.tipo_cambio = tc;
+  await sbFetch('/rest/v1/config?usuario_id=eq.' + userId, {
+    method:'PATCH', prefer:'return=minimal',
+    body: JSON.stringify({tipo_cambio: tc})
+  });
+  render();
+}
+
+async function logout() {
+  localStorage.removeItem('greta_uid');
+  localStorage.removeItem('greta_email');
+  userId = null; txCache = {};
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('fab-btn').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+async function init() {
+  const uid = localStorage.getItem('greta_uid');
+  const email = localStorage.getItem('greta_email');
+  if (uid) { userId = uid; await enterApp(email); }
+}
+init();
+</script>
+</body>
+</html>
