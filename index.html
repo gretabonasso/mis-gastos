@@ -547,19 +547,21 @@ function render(){
   const prev=getPrev(mes.key);
   const real=getReal(mes.key);
   const totalReal=CATS.reduce((a,c)=>a+(real[c]||0),0);
-  const totalPrev=CATS.reduce((a,c)=>a+(prev[c]||0),0);
+  const totalGastado=CATS.filter(c=>c!=='Ahorro'&&c!=='Deuda papá').reduce((a,c)=>a+(real[c]||0),0);
+  const totalPrev=CATS.filter(c=>c!=='Ahorro'&&c!=='Deuda papá').reduce((a,c)=>a+(prev[c]||0),0);
   const saldo=getSaldo(mes.key);
   const restante=saldo-totalReal;
-  const tc=parseFloat(document.getElementById('tc-input').value)||1400;
+  const pctGastado=saldo>0?totalGastado/saldo:0;
 
   // saldo hero
   document.getElementById('saldo-val').textContent=fmt(saldo);
   document.getElementById('saldo-sub').textContent='Gastado: '+fmt(totalReal)+' · Restante: '+fmt(restante);
 
   // cards
-  document.getElementById('c-real').textContent=fmt(totalReal);
+  document.getElementById('c-real').textContent=fmt(totalGastado);
   document.getElementById('c-prev-sub').textContent='de '+fmt(totalPrev)+' previsto';
-  document.getElementById('c-restante').textContent=fmt(restante);
+  document.getElementById('c-restante').textContent=fmt(saldo-totalReal);
+  const tc=parseFloat(document.getElementById('tc-input').value)||1400;
   document.getElementById('c-ahorro-sub').textContent='del saldo disponible';
   const ac=document.getElementById('c-ahorro-card');
   ac.className='card '+(restante>=0?'green':'red');
