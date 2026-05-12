@@ -570,7 +570,6 @@ function render(){
   const diasMes=new Date(2026,mesIdx+4,0).getDate()||30;
   const hoy=new Date().getDate();
   const diasRestantes=Math.max(diasMes-hoy,1);
-  const pctGastado=saldo>0?totalReal/saldo:0;
   const banner=document.getElementById('status-banner');
   let msg,cls;
   if(restante<0){
