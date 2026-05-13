@@ -61,7 +61,6 @@ html,body{min-height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;
 .saldo-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,0.03)}
 .saldo-lbl{font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:6px}
 .saldo-val{font-size:36px;font-weight:500;color:white;line-height:1}
-.saldo-sub{font-size:12px;color:rgba(255,255,255,0.4);margin-top:6px}
 .saldo-edit-btn{position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.6);border-radius:20px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif}
 
 /* STATUS */
@@ -223,10 +222,10 @@ html,body{min-height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;
     <button id="btn-next" onclick="cambiarMes(1)">&#8250;</button>
   </div>
 
+  <!-- SALDO HERO — solo muestra el monto, sin gastado/restante -->
   <div class="saldo-hero">
     <div class="saldo-lbl">Saldo disponible del mes</div>
     <div class="saldo-val" id="saldo-val">$0</div>
-    <div class="saldo-sub" id="saldo-sub">—</div>
     <button class="saldo-edit-btn" onclick="editSaldo()">✏️ editar</button>
   </div>
 
@@ -242,12 +241,12 @@ html,body{min-height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;
     <div class="card green" id="c-lib-card">
       <div class="cl">Libre</div>
       <div class="cv" id="c-libre">$0</div>
-      <div class="cs">disponible</div>
+      <div class="cs">sin comprometer tarjeta</div>
     </div>
     <div class="card blue">
       <div class="cl">Ahorrado</div>
       <div class="cv" id="c-ahorro-usd">USD 0</div>
-      <div class="cs" id="c-ahorro-ars">$0</div>
+      <div class="cs" id="c-ahorro-ars">$0 · TC $<span id="c-ahorro-tc">1400</span></div>
     </div>
   </div>
 
@@ -280,12 +279,13 @@ html,body{min-height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;
     </div>
   </div>
 
+  <!-- TABS: orden Resumen / Transacciones / Promedio mensual / Gráficos / Comparar -->
   <div class="tabs">
     <button class="tab active" onclick="setTab('resumen',this)">Resumen</button>
     <button class="tab" onclick="setTab('transacciones',this)">Transacciones</button>
+    <button class="tab" onclick="setTab('promedios',this)">Promedio mensual</button>
     <button class="tab" onclick="setTab('graficos',this)">Gráficos</button>
     <button class="tab" onclick="setTab('comparacion',this)">Comparar</button>
-    <button class="tab" onclick="setTab('promedios',this)">Promedios</button>
   </div>
 
   <div id="tab-resumen">
@@ -304,19 +304,19 @@ html,body{min-height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;
     </div>
   </div>
 
+  <div id="tab-promedios" style="display:none">
+    <div class="prom-wrap">
+      <h3>Promedio mensual real</h3>
+      <div id="prom-rows"><div class="empty">—</div></div>
+    </div>
+  </div>
+
   <div id="tab-graficos" style="display:none">
     <div class="chart-wrap"><h3>Distribución de gastos</h3><div class="chart-container"><canvas id="pie-chart"></canvas></div></div>
   </div>
 
   <div id="tab-comparacion" style="display:none">
     <div class="comp-wrap"><h3>Comparación mes a mes</h3><div id="comp-rows"><div class="empty">—</div></div></div>
-  </div>
-
-  <div id="tab-promedios" style="display:none">
-    <div class="prom-wrap">
-      <h3>Promedio mensual real</h3>
-      <div id="prom-rows"><div class="empty">—</div></div>
-    </div>
   </div>
 </div>
 
@@ -375,7 +375,6 @@ html,body{min-height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;
 const SB='https://vjqqqvcdyqhcrrwmomiy.supabase.co';
 const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqcXFxdmNkeXFoY3Jyd21vbWl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NDQzOTEsImV4cCI6MjA5NDEyMDM5MX0.psctT6hdeqlJjfhN1_cZI-3wVkzFxQLIKCsTwCnOcj0';
 
-// Mes actual = índice basado en fecha real
 const HOY = new Date();
 const MES_ACTUAL_KEY = (() => {
   const m = HOY.getMonth()+1, y = HOY.getFullYear();
@@ -412,7 +411,6 @@ const PREVISTO={
   'Ahorro':0,'Extraordinario':0,'Deuda papá':0
 };
 
-// Colores por grupo de categoría
 const CAT_GROUP={
   'Comida':'gasto','Gym':'gasto','Transporte':'gasto','Imprevistos':'gasto',
   'Compras personales':'compra','Regalos':'compra','Farmacia':'gasto',
@@ -458,7 +456,8 @@ const TX_ABRIL=[
   {fecha:'2026-04-21',importe:1480,descripcion:'Colectivo',categoria:'Transporte',medio_pago:'Efectivo'},
 ];
 
-let uid=null,mesIdx=0,txCache={},cfg={tipo_cambio:1400,saldo_mes:{},gastos_frecuentes:FREC_DEFAULT};
+// cfg.tc_por_mes = { 'abr26': 1400, 'may26': 1420, ... } — TC guardado por mes
+let uid=null,mesIdx=0,txCache={},cfg={tipo_cambio:1400,saldo_mes:{},gastos_frecuentes:FREC_DEFAULT,tc_por_mes:{}};
 let pieChart=null,isRegister=false,editingId=null;
 
 async function sb(path,opts={}){
@@ -469,6 +468,12 @@ async function sb(path,opts={}){
 
 function fmt(n){return'$'+Math.round(n).toLocaleString('es-AR')}
 function fmtUSD(n){return'USD '+Math.round(n).toLocaleString('es-AR')}
+
+// Devuelve el TC guardado para el mes actual (o el global si no hay)
+function getTCMes(key){
+  if(cfg.tc_por_mes&&cfg.tc_por_mes[key]!=null) return cfg.tc_por_mes[key];
+  return parseFloat(document.getElementById('tc-input').value)||1400;
+}
 
 function toggleMode(){
   isRegister=!isRegister;
@@ -489,7 +494,7 @@ async function authAction(){
     const res=await sb('/rest/v1/usuarios',{method:'POST',prefer:'return=representation',body:JSON.stringify({email,password:pass})});
     if(!res||!res[0]){errEl.textContent='Error al crear cuenta';return}
     uid=res[0].id;
-    await sb('/rest/v1/config',{method:'POST',prefer:'return=minimal',body:JSON.stringify({usuario_id:uid,tipo_cambio:1400,saldo_mes:{},gastos_frecuentes:FREC_DEFAULT})});
+    await sb('/rest/v1/config',{method:'POST',prefer:'return=minimal',body:JSON.stringify({usuario_id:uid,tipo_cambio:1400,saldo_mes:{},gastos_frecuentes:FREC_DEFAULT,tc_por_mes:{}})});
   } else {
     const res=await sb('/rest/v1/usuarios?email=eq.'+encodeURIComponent(email)+'&password=eq.'+encodeURIComponent(pass)+'&select=id,email');
     if(!res||res.length===0){errEl.textContent='Email o contraseña incorrectos';return}
@@ -505,9 +510,13 @@ async function enterApp(email){
   document.getElementById('app-screen').style.display='block';
   document.getElementById('fab-btn').style.display='block';
   document.getElementById('usr-lbl').textContent=email;
-  const c=await sb('/rest/v1/config?usuario_id=eq.'+uid+'&select=tipo_cambio,saldo_mes,gastos_frecuentes');
-  if(c&&c[0]){cfg=c[0];if(!cfg.gastos_frecuentes||!cfg.gastos_frecuentes.length)cfg.gastos_frecuentes=FREC_DEFAULT;document.getElementById('tc-input').value=cfg.tipo_cambio||1400;}
-  // ir al mes actual
+  const c=await sb('/rest/v1/config?usuario_id=eq.'+uid+'&select=tipo_cambio,saldo_mes,gastos_frecuentes,tc_por_mes');
+  if(c&&c[0]){
+    cfg=c[0];
+    if(!cfg.gastos_frecuentes||!cfg.gastos_frecuentes.length)cfg.gastos_frecuentes=FREC_DEFAULT;
+    if(!cfg.tc_por_mes)cfg.tc_por_mes={};
+    document.getElementById('tc-input').value=cfg.tipo_cambio||1400;
+  }
   mesIdx=Math.max(0,MESES.findIndex(m=>m.key===MES_ACTUAL_KEY));
   await cargarTx(MESES[mesIdx].key);
   render();
@@ -558,7 +567,9 @@ function render(){
   const real=getReal(mes.key);
   const txs=txCache[mes.key]||[];
   const saldo=getSaldo(mes.key);
-  const tc=parseFloat(document.getElementById('tc-input').value)||1400;
+  // TC del mes actual (guardado por mes para no afectar retroactivamente otros meses)
+  const tc=getTCMes(mes.key);
+  document.getElementById('tc-input').value=tc;
 
   // totales
   const gastos=CATS.filter(c=>c!=='Ahorro'&&c!=='Deuda papá').reduce((a,c)=>a+(real[c]||0),0);
@@ -567,36 +578,40 @@ function render(){
   const totalReal=gastos+ahorroARS+deudaMes;
   const prevSinAhorro=CATS.filter(c=>c!=='Ahorro').reduce((a,c)=>a+(prev[c]||0),0);
 
-  // breakdown por medio
+  // breakdown por medio (sin ahorro ni deuda)
   const tarjeta=txs.filter(t=>t.categoria!=='Ahorro'&&t.categoria!=='Deuda papá'&&(t.medio_pago==='Mastercard'||t.medio_pago==='Visa')).reduce((a,t)=>a+Number(t.importe),0);
   const efectTransf=txs.filter(t=>t.categoria!=='Ahorro'&&t.categoria!=='Deuda papá'&&t.medio_pago!=='Mastercard'&&t.medio_pago!=='Visa').reduce((a,t)=>a+Number(t.importe),0);
   const ahdTotal=ahorroARS+deudaMes;
-  const restante=saldo-totalReal;
+  const restanteReal=saldo-totalReal;
+  // "Libre" = saldo − gastos ya ejecutados con efectivo/transf − ahorro/deuda. Tarjeta NO se descuenta (aún no salió de tu cuenta)
+  const libre=saldo-efectTransf-ahdTotal;
 
-  // saldo hero
+  // saldo hero — solo el monto
   document.getElementById('saldo-val').textContent=fmt(saldo);
-  document.getElementById('saldo-sub').textContent='Gastado: '+fmt(gastos)+' · Restante: '+fmt(restante);
 
   // cards
   document.getElementById('c-gastado').textContent=fmt(gastos);
   document.getElementById('c-gastado-sub').textContent='de '+fmt(prevSinAhorro)+' prev.';
-  document.getElementById('c-libre').textContent=fmt(restante);
-  document.getElementById('c-lib-card').className='card '+(restante>=0?'green':'red');
+  document.getElementById('c-libre').textContent=fmt(libre);
+  document.getElementById('c-lib-card').className='card '+(libre>=0?'green':'red');
   document.getElementById('c-ahorro-usd').textContent=fmtUSD(ahorroARS/tc);
-  document.getElementById('c-ahorro-ars').textContent=fmt(ahorroARS);
+  document.getElementById('c-ahorro-ars').textContent=fmt(ahorroARS)+' · TC $'+Math.round(tc).toLocaleString('es-AR');
 
   // breakdown
   document.getElementById('sb-efec').textContent=fmt(efectTransf);
   document.getElementById('sb-tarj').textContent=fmt(tarjeta);
   document.getElementById('sb-ahd').textContent=fmt(ahdTotal);
-  document.getElementById('sb-restante').textContent=fmt(restante);
-  document.getElementById('sb-restante').style.color=restante>=0?'var(--green)':'var(--red)';
+  document.getElementById('sb-restante').textContent=fmt(restanteReal);
+  document.getElementById('sb-restante').style.color=restanteReal>=0?'var(--green)':'var(--red)';
 
-  // deuda
-  const cuotasPagadas=txs.reduce((a,t)=>t.categoria==='Deuda papá'?a+Number(t.importe)/tc:a,0)/800;
-  const totalPagadoUSD=MESES.slice(0,mesIdx).reduce((a,m)=>{
-    const r2=getReal(m.key);return a+(r2['Deuda papá']||0)/tc;
-  },0)+(deudaMes/tc);
+  // deuda — usa TCs guardados por mes para no cambiar retroactivamente
+  let totalPagadoUSD=0;
+  for(let i=0;i<MESES.length;i++){
+    const mk=MESES[i].key;
+    const r2=getReal(mk);
+    const tcMes=getTCMes(mk);
+    totalPagadoUSD+=(r2['Deuda papá']||0)/tcMes;
+  }
   const usdPag=Math.round(totalPagadoUSD);
   const usdRest=Math.max(0,14778-usdPag);
   const pct=Math.min(usdPag/14778,1);
@@ -612,16 +627,16 @@ function render(){
   const pct2=saldo>0?gastos/saldo:0;
   const banner=document.getElementById('status-banner');
   let msg,cls;
-  if(restante<0){msg=`⚠️ <strong>Te pasaste por ${fmt(Math.abs(restante))}</strong>. Ojo con los gastos restantes.`;cls='bad';}
-  else if(pct2>0.8){msg=`🟡 Gastaste el <strong>${Math.round(pct2*100)}%</strong> del saldo. Te quedan ${fmt(restante)}.`;cls='warn';}
-  else if(pct2>0.5){msg=`🟢 Vas bien. Gastaste el <strong>${Math.round(pct2*100)}%</strong>. Te quedan ${fmt(restante)}.`;cls='ok';}
+  if(restanteReal<0){msg=`⚠️ <strong>Te pasaste por ${fmt(Math.abs(restanteReal))}</strong>. Ojo con los gastos restantes.`;cls='bad';}
+  else if(pct2>0.8){msg=`🟡 Gastaste el <strong>${Math.round(pct2*100)}%</strong> del saldo. Te quedan ${fmt(restanteReal)}.`;cls='warn';}
+  else if(pct2>0.5){msg=`🟢 Vas bien. Gastaste el <strong>${Math.round(pct2*100)}%</strong>. Te quedan ${fmt(restanteReal)}.`;cls='ok';}
   else{msg=`✅ <strong>Excelente!</strong> Solo usaste el ${Math.round(pct2*100)}% del saldo.`;cls='ok';}
   banner.innerHTML=msg;banner.className='status-banner '+cls;
 
-  // pvr - sin Ahorro
+  // pvr — sin Ahorro ni Deuda papá
   const pvr=document.getElementById('pvr-rows');
   pvr.innerHTML='';
-  CATS.filter(c=>c!=='Ahorro').forEach(cat=>{
+  CATS.filter(c=>c!=='Ahorro'&&c!=='Deuda papá').forEach(cat=>{
     const p=prev[cat]||0,r=real[cat]||0;
     if(p===0&&r===0)return;
     const dif=p-r,pct3=p>0?Math.min(r/p,1):(r>0?1:0),over=r>p&&p>0;
@@ -639,7 +654,6 @@ function renderTx(){
   const key=MESES[mesIdx].key;
   const q=(document.getElementById('tx-search').value||'').toLowerCase();
   let txs=[...(txCache[key]||[])];
-  // ordenar por fecha desc
   txs.sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
   if(q)txs=txs.filter(t=>(t.descripcion||'').toLowerCase().includes(q)||(t.categoria||'').toLowerCase().includes(q));
   const cont=document.getElementById('tx-rows');
@@ -718,16 +732,15 @@ async function renderComparacion(){
 }
 
 async function renderPromedios(){
-  // cargar todos los meses que tengan datos
   for(const m of MESES)await cargarTx(m.key);
   const mesesConDatos=MESES.filter(m=>(txCache[m.key]||[]).length>0);
   if(mesesConDatos.length===0){document.getElementById('prom-rows').innerHTML='<div class="empty">Sin datos suficientes</div>';return}
   const n=mesesConDatos.length;
+  const tc=parseFloat(document.getElementById('tc-input').value)||1400;
   const totGasto=mesesConDatos.reduce((a,m)=>a+CATS.filter(c=>c!=='Ahorro'&&c!=='Deuda papá').reduce((b,c)=>b+(getReal(m.key)[c]||0),0),0)/n;
   const totAhorro=mesesConDatos.reduce((a,m)=>a+(getReal(m.key)['Ahorro']||0),0)/n;
   const totTarjeta=mesesConDatos.reduce((a,m)=>a+(txCache[m.key]||[]).filter(t=>t.medio_pago==='Mastercard'||t.medio_pago==='Visa').reduce((b,t)=>b+Number(t.importe),0),0)/n;
   const totSalidas=mesesConDatos.reduce((a,m)=>a+(['Comida','Regalos','Boludeces Greta','Extraordinario'].reduce((b,c)=>b+(getReal(m.key)[c]||0),0)),0)/n;
-  const tc=parseFloat(document.getElementById('tc-input').value)||1400;
   const rows=[
     {icon:'💸',label:'Gasto promedio mensual',val:fmt(totGasto),sub:'sin ahorro ni deuda'},
     {icon:'💰',label:'Ahorro promedio mensual',val:fmt(totAhorro),sub:fmtUSD(totAhorro/tc)+' aprox'},
@@ -770,7 +783,7 @@ function editarTx(id){
   const medio=t.medio_pago||'Transferencia';
   document.getElementById('f-medio').value=medio;
   document.querySelectorAll('.medio-chip').forEach(c=>{
-    c.classList.toggle('sel',c.textContent.includes(medio)||c.getAttribute('onclick').includes(`'${medio}'`));
+    c.classList.toggle('sel',c.getAttribute('onclick').includes(`'${medio}'`));
   });
   document.getElementById('modal-bg').classList.add('open');
 }
@@ -833,13 +846,17 @@ async function guardarSaldo(){
 
 async function saveTCAndRender(){
   const tc=parseFloat(document.getElementById('tc-input').value)||1400;
-  cfg.tipo_cambio=tc;
-  await sb('/rest/v1/config?usuario_id=eq.'+uid,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({tipo_cambio:tc})});
+  // guardar TC por mes para que no afecte meses anteriores
+  const key=MESES[mesIdx].key;
+  if(!cfg.tc_por_mes)cfg.tc_por_mes={};
+  cfg.tc_por_mes[key]=tc;
+  cfg.tipo_cambio=tc; // también actualiza el global por compatibilidad
+  await sb('/rest/v1/config?usuario_id=eq.'+uid,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({tipo_cambio:tc,tc_por_mes:cfg.tc_por_mes})});
   render();
 }
 
 function setTab(t,btn){
-  ['resumen','transacciones','graficos','comparacion','promedios'].forEach(id=>{
+  ['resumen','transacciones','promedios','graficos','comparacion'].forEach(id=>{
     document.getElementById('tab-'+id).style.display=id===t?'block':'none';
   });
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
@@ -850,6 +867,7 @@ function setTab(t,btn){
 }
 
 async function init(){
+  // Agregar columna tc_por_mes si no existe (migración silenciosa)
   const u=localStorage.getItem('g_uid'),e=localStorage.getItem('g_email');
   if(u){uid=u;await enterApp(e);}
 }
