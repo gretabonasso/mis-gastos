@@ -241,22 +241,28 @@ html,body{min-height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;
     <div class="card green" id="c-lib-card">
       <div class="cl">Libre</div>
       <div class="cv" id="c-libre">$0</div>
-      <div class="cs">sin comprometer tarjeta</div>
+      <div class="cs" id="c-libre-sub">—</div>
     </div>
     <div class="card blue">
       <div class="cl">Ahorrado</div>
       <div class="cv" id="c-ahorro-usd">USD 0</div>
-      <div class="cs" id="c-ahorro-ars">$0 · TC $<span id="c-ahorro-tc">1400</span></div>
+      <div class="cs">
+        <span id="c-ahorro-ars">$0</span> ·
+        TC $<input type="number" id="c-tc-ahorro" value="1400"
+          style="width:54px;border:none;border-bottom:1px solid var(--accent);background:transparent;font-size:10px;font-family:'DM Sans',sans-serif;color:var(--t2);outline:none;padding:0 1px;"
+          onchange="onTCAhorroChange()"/>
+      </div>
     </div>
   </div>
 
   <!-- SALDO BREAKDOWN -->
   <div class="saldo-breakdown">
     <div class="sb-title">Desglose del saldo</div>
-    <div class="sb-row"><div class="sb-lbl"><div class="sb-dot" style="background:var(--red)"></div>Ya gastado (efectivo/transf.)</div><div class="sb-val" id="sb-efec" style="color:var(--red)">$0</div></div>
-    <div class="sb-row"><div class="sb-lbl"><div class="sb-dot" style="background:var(--orange)"></div>Comprometido en tarjeta</div><div class="sb-val" id="sb-tarj" style="color:var(--orange)">$0</div></div>
-    <div class="sb-row"><div class="sb-lbl"><div class="sb-dot" style="background:var(--accent)"></div>Ahorro / Deuda papá</div><div class="sb-val" id="sb-ahd" style="color:var(--accent)">$0</div></div>
-    <div class="sb-row total"><div class="sb-lbl">Restante real</div><div class="sb-val" id="sb-restante" style="color:var(--green)">$0</div></div>
+    <div class="sb-row"><div class="sb-lbl"><div class="sb-dot" style="background:var(--red)"></div>Ya gastado (transferencia)</div><div class="sb-val" id="sb-efec" style="color:var(--red)">$0</div></div>
+    <div class="sb-row"><div class="sb-lbl"><div class="sb-dot" style="background:var(--orange)"></div>Pagar en tarjeta</div><div class="sb-val" id="sb-tarj" style="color:var(--orange)">$0</div></div>
+    <div class="sb-row"><div class="sb-lbl"><div class="sb-dot" style="background:var(--green)"></div>Ahorro</div><div class="sb-val" id="sb-ahorro-bd" style="color:var(--green)">$0</div></div>
+    <div class="sb-row"><div class="sb-lbl"><div class="sb-dot" style="background:var(--accent)"></div>Deuda papá</div><div class="sb-val" id="sb-deuda-bd" style="color:var(--accent)">$0</div></div>
+    <div class="sb-row total"><div class="sb-lbl">Total</div><div class="sb-val" id="sb-total">$0</div></div>
   </div>
 
   <!-- DEUDA -->
@@ -581,10 +587,11 @@ function render(){
   // breakdown por medio (sin ahorro ni deuda)
   const tarjeta=txs.filter(t=>t.categoria!=='Ahorro'&&t.categoria!=='Deuda papá'&&(t.medio_pago==='Mastercard'||t.medio_pago==='Visa')).reduce((a,t)=>a+Number(t.importe),0);
   const efectTransf=txs.filter(t=>t.categoria!=='Ahorro'&&t.categoria!=='Deuda papá'&&t.medio_pago!=='Mastercard'&&t.medio_pago!=='Visa').reduce((a,t)=>a+Number(t.importe),0);
-  const ahdTotal=ahorroARS+deudaMes;
   const restanteReal=saldo-totalReal;
-  // "Libre" = saldo − gastos ya ejecutados con efectivo/transf − ahorro/deuda. Tarjeta NO se descuenta (aún no salió de tu cuenta)
-  const libre=saldo-efectTransf-ahdTotal;
+  // "Libre" = saldo − ahorroARS − tarjeta − deudaMes
+  const libre=saldo-ahorroARS-tarjeta-deudaMes;
+  // Total breakdown = suma de las 4 filas
+  const totalBreakdown=efectTransf+tarjeta+ahorroARS+deudaMes;
 
   // saldo hero — solo el monto
   document.getElementById('saldo-val').textContent=fmt(saldo);
@@ -594,15 +601,18 @@ function render(){
   document.getElementById('c-gastado-sub').textContent='de '+fmt(prevSinAhorro)+' prev.';
   document.getElementById('c-libre').textContent=fmt(libre);
   document.getElementById('c-lib-card').className='card '+(libre>=0?'green':'red');
-  document.getElementById('c-ahorro-usd').textContent=fmtUSD(ahorroARS/tc);
-  document.getElementById('c-ahorro-ars').textContent=fmt(ahorroARS)+' · TC $'+Math.round(tc).toLocaleString('es-AR');
+  document.getElementById('c-libre-sub').textContent='saldo − ahorro − tarjeta − deuda';
+  // ahorrado card — TC editable en el mismo card
+  const tcAhorro=parseFloat(document.getElementById('c-tc-ahorro').value)||1400;
+  document.getElementById('c-ahorro-usd').textContent=fmtUSD(ahorroARS/tcAhorro);
+  document.getElementById('c-ahorro-ars').textContent=fmt(ahorroARS);
 
   // breakdown
   document.getElementById('sb-efec').textContent=fmt(efectTransf);
   document.getElementById('sb-tarj').textContent=fmt(tarjeta);
-  document.getElementById('sb-ahd').textContent=fmt(ahdTotal);
-  document.getElementById('sb-restante').textContent=fmt(restanteReal);
-  document.getElementById('sb-restante').style.color=restanteReal>=0?'var(--green)':'var(--red)';
+  document.getElementById('sb-ahorro-bd').textContent=fmt(ahorroARS);
+  document.getElementById('sb-deuda-bd').textContent=fmt(deudaMes);
+  document.getElementById('sb-total').textContent=fmt(totalBreakdown);
 
   // deuda — usa TCs guardados por mes para no cambiar retroactivamente
   let totalPagadoUSD=0;
@@ -865,6 +875,8 @@ function setTab(t,btn){
   if(t==='comparacion')renderComparacion();
   if(t==='promedios')renderPromedios();
 }
+
+function onTCAhorroChange(){render();}
 
 async function init(){
   // Agregar columna tc_por_mes si no existe (migración silenciosa)
