@@ -601,11 +601,10 @@ function render(){
   document.getElementById('c-gastado-sub').textContent='de '+fmt(prevSinAhorro)+' prev.';
   document.getElementById('c-libre').textContent=fmt(libre);
   document.getElementById('c-lib-card').className='card '+(libre>=0?'green':'red');
-  document.getElementById('c-libre-sub').textContent='saldo − ahorro − tarjeta − deuda';
-  // ahorrado card — TC editable en el mismo card
+  document.getElementById('c-libre-sub').textContent='';
+  // ahorrado card — solo USD + TC editable
   const tcAhorro=parseFloat(document.getElementById('c-tc-ahorro').value)||1400;
   document.getElementById('c-ahorro-usd').textContent=fmtUSD(ahorroARS/tcAhorro);
-  document.getElementById('c-ahorro-ars').textContent=fmt(ahorroARS);
 
   // breakdown
   document.getElementById('sb-efec').textContent=fmt(efectTransf);
