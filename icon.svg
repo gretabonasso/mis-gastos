@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="100" fill="#0F1C2E"/>
+  <!-- Card shape -->
+  <rect x="100" y="160" width="312" height="200" rx="24" fill="none" stroke="#4A8FD4" stroke-width="16"/>
+  <!-- Card stripe -->
+  <rect x="100" y="210" width="312" height="40" fill="#1B3A5C"/>
+  <!-- Upward arrow (growth) -->
+  <polyline points="180,320 230,260 280,290 340,210" fill="none" stroke="#7ED4A0" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <polygon points="340,210 310,215 330,240" fill="#7ED4A0"/>
+  <!-- Dollar sign circle -->
+  <circle cx="390" cy="340" r="60" fill="#0F1C2E" stroke="#4A8FD4" stroke-width="12"/>
+  <text x="390" y="358" font-family="Georgia,serif" font-size="56" font-weight="bold" fill="#7ED4A0" text-anchor="middle">$</text>
+</svg>
