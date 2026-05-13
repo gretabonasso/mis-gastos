@@ -224,7 +224,7 @@ html,body{min-height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;
 
   <!-- SALDO HERO — solo muestra el monto, sin gastado/restante -->
   <div class="saldo-hero">
-    <div class="saldo-lbl">Saldo disponible del mes</div>
+    <div class="saldo-lbl">Saldo inicial del mes</div>
     <div class="saldo-val" id="saldo-val">$0</div>
     <button class="saldo-edit-btn" onclick="editSaldo()">✏️ editar</button>
   </div>
@@ -247,7 +247,6 @@ html,body{min-height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;
       <div class="cl">Ahorrado</div>
       <div class="cv" id="c-ahorro-usd">USD 0</div>
       <div class="cs">
-        <span id="c-ahorro-ars">$0</span> ·
         TC $<input type="number" id="c-tc-ahorro" value="1400"
           style="width:54px;border:none;border-bottom:1px solid var(--accent);background:transparent;font-size:10px;font-family:'DM Sans',sans-serif;color:var(--t2);outline:none;padding:0 1px;"
           onchange="onTCAhorroChange()"/>
@@ -269,7 +268,7 @@ html,body{min-height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;
   <div class="deuda-card">
     <div class="deuda-top">
       <h3>💰 Deuda papá</h3>
-      <span id="d-cuotas" style="font-size:11px;color:var(--t3)">— cuotas restantes</span>
+      <span id="d-cuotas" style="font-size:11px;color:var(--t3)">12 cuotas restantes</span>
     </div>
     <div class="deuda-progress"><div class="deuda-fill" id="d-fill"></div></div>
     <div class="deuda-nums">
