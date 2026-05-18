@@ -587,8 +587,8 @@ function render(){
   const tarjeta=txs.filter(t=>t.categoria!=='Ahorro'&&t.categoria!=='Deuda papá'&&(t.medio_pago==='Mastercard'||t.medio_pago==='Visa')).reduce((a,t)=>a+Number(t.importe),0);
   const efectTransf=txs.filter(t=>t.categoria!=='Ahorro'&&t.categoria!=='Deuda papá'&&t.medio_pago!=='Mastercard'&&t.medio_pago!=='Visa').reduce((a,t)=>a+Number(t.importe),0);
   const restanteReal=saldo-totalReal;
-  // "Libre" = saldo − ahorroARS − tarjeta − deudaMes
-  const libre=saldo-ahorroARS-tarjeta-deudaMes;
+  // "Libre" = saldo - totalReal
+  const libre=saldo - totalReal;
   // Total breakdown = suma de las 4 filas
   const totalBreakdown=efectTransf+tarjeta+ahorroARS+deudaMes;
 
